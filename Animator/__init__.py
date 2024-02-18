@@ -1,7 +1,9 @@
-import json
+import neopixel
 import time
 import random
 import math
+from dataclasses import dataclass, field
+from typing import Iterable
 
 
 import Animator.light_funcs as light_funcs
@@ -11,8 +13,16 @@ class AnimationState:
     def __init__(self):
         self.state = "OFF"
         self.color = {"r": 255, "g": 255, "b": 255}
-        self.effect = "None"
+        self.effect = "SingleColor"
         self.brightness = 0.0
+
+@dataclass
+class SingleColorArgs:
+    color: tuple = (255, 0, 0)
+
+@dataclass
+class AnimationArgs:
+    single_color: SingleColorArgs = SingleColorArgs()
 
 # Set the desired FPS for your animation
 slow_fps = 5
@@ -63,11 +73,12 @@ def rindex(lst, value):
     return len(lst) - i - 1
 
 class Animator():
-    def __init__(self, pixels, num_pixels, animation_state) -> None:
+    def __init__(self, pixels: neopixel.NeoPixel, num_pixels: int, animation_state: AnimationState, animation_args: AnimationArgs) -> None:
         super().__init__()
         self.pixels = pixels
         self.num_pixels = num_pixels
         self.animation_state = animation_state
+        self.animation_args = animation_args
 
     def cycle(self):
         COLORS = [
@@ -93,9 +104,9 @@ class Animator():
             fade_stage = 0
             swipe_stage = 0
 
-        # Set NeoPixels based on the "None" effect
-        if self.animation_state.effect == "None" and self.animation_state.state == "ON":
-            self.pixels.fill((self.animation_state.color["r"], self.animation_state.color["g"], self.animation_state.color["b"]))
+        # Set NeoPixels based on the "SingleColor" effect
+        if self.animation_state.effect == "SingleColor" and self.animation_state.state == "ON":
+            self.pixels.fill(self.animation_args.single_color.color)
             self.pixels.brightness = self.animation_state.brightness / 255.0
             time.sleep(1 / basic_fps)
         elif self.animation_state.effect == "Rainbow" and self.animation_state.state == "ON":

@@ -1,3 +1,4 @@
+import json
 from paho.mqtt import client as mqtt_client
 import logging
 import time
@@ -14,7 +15,7 @@ client_id = f'python-mqtt-{random.randint(0, 1000)}'
 
 state_topic = "MQTTAnimator/state"
 brightness_topic = "MQTTAnimator/brightness"
-color_topic = "MQTTAnimator/color"
+args_topic = "MQTTAnimator/args"
 animation_topic = "MQTTAnimator/animation"
 
 FIRST_RECONNECT_DELAY = 1
@@ -26,12 +27,15 @@ MAX_RECONNECT_DELAY = 60
 num_pixels = 50
 pixel_pin = board.D18  # Change this to the pin your NeoPixels are connected to
 
+animation_args = Animator.AnimationArgs()
+animation_args.single_color.color = [0, 255, 0]
+
+animation_state = Animator.AnimationState()
+animation_state.brightness = 100
+
 # Create NeoPixel object
 pixels = neopixel.NeoPixel(pixel_pin, num_pixels, brightness=1.0, auto_write=False, pixel_order="RGB")
-animation_state = Animator.AnimationState()
-animation_state.color = {"r": 255, "g": 0, "b": 0}
-animation_state.brightness = 100
-animator = Animator.Animator(pixels, num_pixels, animation_state)
+animator = Animator.Animator(pixels, num_pixels, animation_state, animation_args)
 
 def connect_mqtt():
     def on_connect(client, userdata, flags, rc):
@@ -77,17 +81,20 @@ def on_message(client, userdata, msg):
             animation_state.brightness = int(msg.payload.decode())
         except:
             logging.warn("Invalid brightness data: %s", msg.payload.decode())
-    elif msg.topic == color_topic:
-        rgb = msg.payload.decode().split(',')
-        print(rgb)
-        if len(rgb) == 3 and all(color.isdigit() for color in rgb):
-            animation_state.color = {"r": int(rgb[0]), "g": int(rgb[1]), "b": int(rgb[2])}
+    elif msg.topic == args_topic:
+        animation, data = msg.payload.decode().split(",", maxsplit=1)
+        data = json.loads(data)
+
+        argument = getattr(animation_args, animation)
+
+        for key, value in data.items():
+            setattr(argument, key, value)
 
 
 if __name__ == "__main__":
     client = connect_mqtt()
     client.subscribe(state_topic)
-    client.subscribe(color_topic)
+    client.subscribe(args_topic)
     client.subscribe(brightness_topic)
     client.subscribe(animation_topic)
     client.on_message = on_message
