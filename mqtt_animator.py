@@ -14,6 +14,7 @@ client_id = f'python-mqtt-{random.randint(0, 1000)}'
 
 state_topic = "MQTTAnimator/state"
 brightness_topic = "MQTTAnimator/brightness"
+color_topic = "MQTTAnimator/color"
 animation_topic = "MQTTAnimator/animation"
 
 FIRST_RECONNECT_DELAY = 1
@@ -70,17 +71,23 @@ def on_message(client, userdata, msg):
     print(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
 
     if msg.topic == state_topic:
-        animation_state.state = msg.payload.decode()
+        animation_state.state = "ON" if msg.payload.decode() == "ON" else "OFF"
     elif msg.topic == brightness_topic:
         try:
             animation_state.brightness = int(msg.payload.decode())
         except:
             logging.warn("Invalid brightness data: %s", msg.payload.decode())
+    elif msg.topic == color_topic:
+        rgb = msg.payload.decode().split(',')
+        print(rgb)
+        if len(rgb) == 3 and all(color.isdigit() for color in rgb):
+            animation_state.color = {"r": int(rgb[0]), "g": int(rgb[1]), "b": int(rgb[2])}
 
 
 if __name__ == "__main__":
     client = connect_mqtt()
     client.subscribe(state_topic)
+    client.subscribe(color_topic)
     client.subscribe(brightness_topic)
     client.subscribe(animation_topic)
     client.on_message = on_message
