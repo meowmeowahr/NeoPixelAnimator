@@ -28,9 +28,16 @@ class FadeArgs:
     colorb: tuple = (0, 0, 0)
 
 @dataclass
+class FlashArgs:
+    colora: tuple = (255, 0, 0)
+    colorb: tuple = (0, 0, 0)
+    speed: float = 25
+
+@dataclass
 class AnimationArgs:
     single_color: SingleColorArgs = SingleColorArgs()
     fade: FadeArgs = FadeArgs()
+    flash: FlashArgs = FlashArgs()
 
 # Set the desired FPS for your animation
 slow_fps = 5
@@ -79,6 +86,16 @@ def rindex(lst, value):
         return None
     lst.reverse()
     return len(lst) - i - 1
+
+def square_wave(time, period, amplitude):
+    # Calculate the remainder when t is divided by T
+    remainder = time % period
+    
+    # Determine the value of the square wave based on the remainder
+    if remainder < period / 2:
+        return amplitude
+    else:
+        return -amplitude
 
 class Animator():
     def __init__(self, pixels: neopixel.NeoPixel, num_pixels: int,
@@ -166,43 +183,18 @@ class Animator():
             self.pixels.show()
             self.pixels.brightness = self.animation_state.brightness / 255.0
             time.sleep(1 / fast_fps)
-        elif self.animation_state.effect == "FadeColorToWhite" and self.animation_state.state == "ON":
-            if self.fade_stage == 0:
-                for index, color in enumerate(generate_color_pattern(self.num_pixels)):
-                    self.pixels[index - 1] = mix_colors((0, 0, 0), color, self.animation_step / 255)
-                if self.animation_step == 255:
-                    self.fade_stage = 1
-            elif self.fade_stage == 1:
-                for index, color in enumerate(generate_color_pattern(self.num_pixels)):
-                    self.pixels[index - 1] = mix_colors(color, (0, 0, 0), self.animation_step / 255)
-                if self.animation_step == 255:
-                    self.fade_stage = 2
-            elif self.fade_stage == 2:
-                for index, color in enumerate(generate_color_pattern(self.num_pixels)):
-                    self.pixels[index - 1] = mix_colors((0, 0, 0), (255, 255, 255), self.animation_step / 255)
-                if self.animation_step == 255:
-                    self.fade_stage = 3
-            elif self.fade_stage == 3:
-                for index, color in enumerate(generate_color_pattern(self.num_pixels)):
-                    self.pixels[index - 1] = mix_colors((255, 255, 255), (0, 0, 0),  self.animation_step / 255)
-                if self.animation_step == 255:
-                    self.fade_stage = 0
-            
-            self.pixels.brightness = self.animation_state.brightness / 255.0
-            time.sleep(1 / fast_fps)
-        elif self.animation_state.effect == "FlashColorToWhite" and self.animation_state.state == "ON":
-            if self.animation_step // 25 % 2:
-                for index, color in enumerate(generate_color_pattern(self.num_pixels)):
-                    self.pixels[index - 1] = color
+        elif self.animation_state.effect == "Flash" and self.animation_state.state == "ON":
+            if square_wave(self.animation_step, self.animation_args.flash.speed, 1) == 1:
+                self.pixels.fill(self.animation_args.flash.colora)
             else:
-                self.pixels.fill((255, 255, 255))
+                self.pixels.fill(self.animation_args.flash.colorb)
             
             self.pixels.brightness = self.animation_state.brightness / 255.0
             time.sleep(1 / basic_fps)
         elif self.animation_state.effect == "WipeRedToGreen" and self.animation_state.state == "ON":
             if self.swipe_stage == 0:
                 last_pixel = rindex(list(self.pixels), [255, 0, 0])
-                if last_pixel == None:
+                if last_pixel is None:
                     last_pixel = -1
 
                 if last_pixel + 2 > self.num_pixels:
