@@ -1,12 +1,12 @@
 "NeoPixel Animation Library"
 
-import neopixel
-import time
-import random
 import math
+import random
+import time
 from dataclasses import dataclass, field
 from typing import Iterable
 
+import neopixel
 
 import Animator.light_funcs as light_funcs
 
@@ -75,12 +75,19 @@ def rindex(lst, value):
     return len(lst) - i - 1
 
 class Animator():
-    def __init__(self, pixels: neopixel.NeoPixel, num_pixels: int, animation_state: AnimationState, animation_args: AnimationArgs) -> None:
+    def __init__(self, pixels: neopixel.NeoPixel, num_pixels: int, 
+                 animation_state: AnimationState, animation_args: AnimationArgs) -> None:
         super().__init__()
         self.pixels = pixels
         self.num_pixels = num_pixels
         self.animation_state = animation_state
         self.animation_args = animation_args
+
+        self.animation_step = 1
+        self.previous_animation = ""
+
+        self.fade_stage = 0
+        self.swipe_stage = 0
 
     def cycle(self):
         COLORS = [
@@ -92,19 +99,13 @@ class Animator():
             (0, 0, 0)      # Off
         ]
 
-        animation_step = 1
-        previous_animation = ""
-
-        fade_stage = 0
-        swipe_stage = 0
-
-        if previous_animation != self.animation_state.effect: # reset animaton data
+        if self.previous_animation != self.animation_state.effect: # reset animaton data
             self.pixels.fill((0, 0, 0))
 
-            previous_animation = self.animation_state.effect
-            animation_step = 1
-            fade_stage = 0
-            swipe_stage = 0
+            self.previous_animation = self.animation_state.effect
+            self.animation_step = 1
+            self.fade_stage = 0
+            self.swipe_stage = 0
 
         # Set NeoPixels based on the "SingleColor" effect
         if self.animation_state.effect == "SingleColor" and self.animation_state.state == "ON":
@@ -113,25 +114,25 @@ class Animator():
             time.sleep(1 / basic_fps)
         elif self.animation_state.effect == "Rainbow" and self.animation_state.state == "ON":
             for i in range(self.num_pixels):
-                pixel_index = (i * 256 // self.num_pixels) + animation_step
+                pixel_index = (i * 256 // self.num_pixels) + self.animation_step
                 self.pixels[i] = light_funcs.wheel(pixel_index & 255)
             self.pixels.brightness = self.animation_state.brightness / 255.0
             time.sleep(1 / fast_fps)
         elif self.animation_state.effect == "GlitterRainbow" and self.animation_state.state == "ON":
             for i in range(self.num_pixels):
-                pixel_index = (i * 256 // self.num_pixels) + animation_step
+                pixel_index = (i * 256 // self.num_pixels) + self.animation_step
                 self.pixels[i] = light_funcs.wheel(pixel_index & 255)
             self.pixels.brightness = self.animation_state.brightness / 255.0
             led = random.randint(0, self.num_pixels-1)
             self.pixels[led] = (255, 255, 255)
             time.sleep(1 / fast_fps)
         elif self.animation_state.effect == "Colorloop" and self.animation_state.state == "ON":
-            self.pixels.fill(light_funcs.wheel(animation_step))
+            self.pixels.fill(light_funcs.wheel(self.animation_step))
             self.pixels.brightness = self.animation_state.brightness / 255.0
             time.sleep(1 / fast_fps)
         elif self.animation_state.effect == "Magic" and self.animation_state.state == "ON":
             for i in range(self.num_pixels):
-                pixel_index = (i * 256 // self.num_pixels) + animation_step
+                pixel_index = (i * 256 // self.num_pixels) + self.animation_step
                 color = float(math.sin(pixel_index / 4 - self.num_pixels))
                 # convert the -1 to 1 to 110 to 180
                 color = light_funcs.map_range(color, -1, 1, 120, 200)
@@ -140,7 +141,7 @@ class Animator():
             time.sleep(1 / basic_fps)
         elif self.animation_state.effect == "Fire" and self.animation_state.state == "ON":
             for i in range(self.num_pixels):
-                pixel_index = (i * 256 // self.num_pixels) + animation_step
+                pixel_index = (i * 256 // self.num_pixels) + self.animation_step
                 color = float(math.sin(pixel_index / 4 - self.num_pixels))
                 # convert the -1 to 1 to 110 to 180
                 color = light_funcs.map_range(color, -1, 1, 70, 85)
@@ -153,45 +154,49 @@ class Animator():
             self.pixels.brightness = self.animation_state.brightness / 255.0
             time.sleep(1 / basic_fps)
         elif self.animation_state.effect == "Fade" and self.animation_state.state == "ON":
-            if fade_stage == 0:
-                self.pixels.fill((self.animation_state.color[0] * animation_step // 255, self.animation_state.color[1] * animation_step // 255, self.animation_state.color[2] * animation_step // 255))
+            if self.fade_stage == 0:
+                self.pixels.fill((self.animation_state.color[0] * self.animation_step // 255,
+                                  self.animation_state.color[1] * self.animation_step // 255,
+                                  self.animation_state.color[2] * self.animation_step // 255))
                 self.pixels.show()
-                if animation_step == 255:
-                    fade_stage = 1
+                if self.animation_step == 255:
+                    self.fade_stage = 1
             else:
-                self.pixels.fill((self.animation_state.color[0] * (255 - animation_step) // 255, self.animation_state.color[1] * (255 - animation_step) // 255, self.animation_state.color[2] * (255 - animation_step) // 255))
+                self.pixels.fill((self.animation_state.color[0] * (255 - self.animation_step) // 255,
+                                  self.animation_state.color[1] * (255 - self.animation_step) // 255,
+                                  self.animation_state.color[2] * (255 - self.animation_step) // 255))
                 self.pixels.show()
-                if animation_step == 255:
-                    fade_stage = 0
+                if self.animation_step == 255:
+                    self.fade_stage = 0
             
             self.pixels.brightness = self.animation_state.brightness / 255.0
             time.sleep(1 / fast_fps)
         elif self.animation_state.effect == "FadeColorToWhite" and self.animation_state.state == "ON":
-            if fade_stage == 0:
+            if self.fade_stage == 0:
                 for index, color in enumerate(generate_color_pattern(self.num_pixels)):
-                    self.pixels[index - 1] = mix_colors((0, 0, 0), color, animation_step / 255)
-                if animation_step == 255:
-                    fade_stage = 1
-            elif fade_stage == 1:
+                    self.pixels[index - 1] = mix_colors((0, 0, 0), color, self.animation_step / 255)
+                if self.animation_step == 255:
+                    self.fade_stage = 1
+            elif self.fade_stage == 1:
                 for index, color in enumerate(generate_color_pattern(self.num_pixels)):
-                    self.pixels[index - 1] = mix_colors(color, (0, 0, 0), animation_step / 255)
-                if animation_step == 255:
-                    fade_stage = 2
-            elif fade_stage == 2:
+                    self.pixels[index - 1] = mix_colors(color, (0, 0, 0), self.animation_step / 255)
+                if self.animation_step == 255:
+                    self.fade_stage = 2
+            elif self.fade_stage == 2:
                 for index, color in enumerate(generate_color_pattern(self.num_pixels)):
-                    self.pixels[index - 1] = mix_colors((0, 0, 0), (255, 255, 255), animation_step / 255)
-                if animation_step == 255:
-                    fade_stage = 3
-            elif fade_stage == 3:
+                    self.pixels[index - 1] = mix_colors((0, 0, 0), (255, 255, 255), self.animation_step / 255)
+                if self.animation_step == 255:
+                    self.fade_stage = 3
+            elif self.fade_stage == 3:
                 for index, color in enumerate(generate_color_pattern(self.num_pixels)):
-                    self.pixels[index - 1] = mix_colors((255, 255, 255), (0, 0, 0),  animation_step / 255)
-                if animation_step == 255:
-                    fade_stage = 0
+                    self.pixels[index - 1] = mix_colors((255, 255, 255), (0, 0, 0),  self.animation_step / 255)
+                if self.animation_step == 255:
+                    self.fade_stage = 0
             
             self.pixels.brightness = self.animation_state.brightness / 255.0
             time.sleep(1 / fast_fps)
         elif self.animation_state.effect == "FlashColorToWhite" and self.animation_state.state == "ON":
-            if animation_step // 25 % 2:
+            if self.animation_step // 25 % 2:
                 for index, color in enumerate(generate_color_pattern(self.num_pixels)):
                     self.pixels[index - 1] = color
             else:
@@ -200,13 +205,13 @@ class Animator():
             self.pixels.brightness = self.animation_state.brightness / 255.0
             time.sleep(1 / basic_fps)
         elif self.animation_state.effect == "WipeRedToGreen" and self.animation_state.state == "ON":
-            if swipe_stage == 0:
+            if self.swipe_stage == 0:
                 last_pixel = rindex(list(self.pixels), [255, 0, 0])
                 if last_pixel == None:
                     last_pixel = -1
 
                 if last_pixel + 2 > self.num_pixels:
-                    swipe_stage = 1
+                    self.swipe_stage = 1
                 else:
                     self.pixels[last_pixel + 1] = (255, 0, 0)
             else:
@@ -215,7 +220,7 @@ class Animator():
                     last_pixel = -1
 
                 if last_pixel + 2 > self.num_pixels:
-                    swipe_stage = 0
+                    self.swipe_stage = 0
                 else:
                     self.pixels[last_pixel + 1] = (0, 255, 0)
 
@@ -239,6 +244,6 @@ class Animator():
             time.sleep(1 / basic_fps)
         
         self.pixels.show()
-        animation_step += 1
-        if animation_step > 255:
-            animation_step = 1
+        self.animation_step += 1
+        if self.animation_step > 255:
+            self.animation_step = 1

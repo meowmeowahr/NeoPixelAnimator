@@ -4,6 +4,7 @@ import json
 import logging
 import random
 import time
+import threading
 
 import board
 import neopixel
@@ -80,6 +81,8 @@ def on_message(cli, userdata, msg):
             animation_state.brightness = int(msg.payload.decode())
         else:
             logging.warning("Invalid brightness data: %s", msg.payload.decode())
+    elif msg.topic == animation_topic:
+        animation_state.effect = msg.payload.decode()
     elif msg.topic == args_topic:
         animation, data = msg.payload.decode().split(",", maxsplit=1)
         data = json.loads(data)
@@ -94,13 +97,14 @@ if __name__ == "__main__":
     client = mqtt_client.Client(client_id)
     client.on_connect = on_connect
     client.on_disconnect = on_disconnect
+    client.on_message = on_message
     client.connect(BROKER, PORT)
     client.subscribe(state_topic)
     client.subscribe(brightness_topic)
     client.subscribe(animation_topic)
     client.subscribe(args_topic)
-    client.on_message = on_message
+
+    threading.Thread(target=client.loop_forever, name="MQTT_Updater", daemon=True).start()
 
     while True:
         animator.cycle()
-        client.loop()
