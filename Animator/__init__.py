@@ -23,8 +23,14 @@ class SingleColorArgs:
     color: tuple = (255, 0, 0)
 
 @dataclass
+class FadeArgs:
+    colora: tuple = (255, 0, 0)
+    colorb: tuple = (0, 0, 0)
+
+@dataclass
 class AnimationArgs:
     single_color: SingleColorArgs = SingleColorArgs()
+    fade: FadeArgs = FadeArgs()
 
 # Set the desired FPS for your animation
 slow_fps = 5
@@ -75,7 +81,7 @@ def rindex(lst, value):
     return len(lst) - i - 1
 
 class Animator():
-    def __init__(self, pixels: neopixel.NeoPixel, num_pixels: int, 
+    def __init__(self, pixels: neopixel.NeoPixel, num_pixels: int,
                  animation_state: AnimationState, animation_args: AnimationArgs) -> None:
         super().__init__()
         self.pixels = pixels
@@ -154,21 +160,10 @@ class Animator():
             self.pixels.brightness = self.animation_state.brightness / 255.0
             time.sleep(1 / basic_fps)
         elif self.animation_state.effect == "Fade" and self.animation_state.state == "ON":
-            if self.fade_stage == 0:
-                self.pixels.fill((self.animation_state.color[0] * self.animation_step // 255,
-                                  self.animation_state.color[1] * self.animation_step // 255,
-                                  self.animation_state.color[2] * self.animation_step // 255))
-                self.pixels.show()
-                if self.animation_step == 255:
-                    self.fade_stage = 1
-            else:
-                self.pixels.fill((self.animation_state.color[0] * (255 - self.animation_step) // 255,
-                                  self.animation_state.color[1] * (255 - self.animation_step) // 255,
-                                  self.animation_state.color[2] * (255 - self.animation_step) // 255))
-                self.pixels.show()
-                if self.animation_step == 255:
-                    self.fade_stage = 0
-            
+            self.pixels.fill(light_funcs.round_tuple(mix_colors(self.animation_args.fade.colora,
+                                                    self.animation_args.fade.colorb,
+                                                    math.sin((self.animation_step / 255) * math.pi))))
+            self.pixels.show()
             self.pixels.brightness = self.animation_state.brightness / 255.0
             time.sleep(1 / fast_fps)
         elif self.animation_state.effect == "FadeColorToWhite" and self.animation_state.state == "ON":

@@ -1,4 +1,4 @@
-def round_tuple(t, n=2):
+def round_tuple(t, n=None):
     return tuple(map(lambda x: round(x, n), t))
 
 def multiply_tuple(t, n):
