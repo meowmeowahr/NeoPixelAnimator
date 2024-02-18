@@ -1,16 +1,18 @@
-import json
-from paho.mqtt import client as mqtt_client
-import logging
-import time
-import random
+"MQTT NeoPixel Animation System"
 
-import neopixel
+import json
+import logging
+import random
+import time
+
 import board
+import neopixel
+from paho.mqtt import client as mqtt_client
+
 import Animator
 
-broker = 'localhost'
-port = 1883
-topic = "python/mqtt"
+BROKER = 'localhost'
+PORT = 1883
 client_id = f'python-mqtt-{random.randint(0, 1000)}'
 
 state_topic = "MQTTAnimator/state"
@@ -25,7 +27,7 @@ MAX_RECONNECT_DELAY = 60
 
 # Define the number of NeoPixels and pin
 num_pixels = 50
-pixel_pin = board.D18  # Change this to the pin your NeoPixels are connected to
+pixel_pin = getattr(board, 'D18') # Change this to the pin your NeoPixels are connected to
 
 animation_args = Animator.AnimationArgs()
 animation_args.single_color.color = [0, 255, 0]
@@ -34,53 +36,50 @@ animation_state = Animator.AnimationState()
 animation_state.brightness = 100
 
 # Create NeoPixel object
-pixels = neopixel.NeoPixel(pixel_pin, num_pixels, brightness=1.0, auto_write=False, pixel_order="RGB")
+pixels = neopixel.NeoPixel(pixel_pin, num_pixels, brightness=1.0,
+                           auto_write=False, pixel_order="RGB")
 animator = Animator.Animator(pixels, num_pixels, animation_state, animation_args)
 
-def connect_mqtt():
-    def on_connect(client, userdata, flags, rc):
-        if rc == 0:
-            print("Connected to MQTT Broker!")
-        else:
-            print("Failed to connect, return code %d\n", rc)
+def on_connect(cli, userdata, flags, rc):
+    "On disconnection of mqtt"
+    if rc == 0:
+        print("Connected to MQTT Broker!")
+    else:
+        print("Failed to connect, return code %d\n", rc)
 
-    def on_disconnect(client, userdata, rc):
-        logging.info("Disconnected with result code: %s", rc)
-        reconnect_count, reconnect_delay = 0, FIRST_RECONNECT_DELAY
-        while reconnect_count < MAX_RECONNECT_COUNT:
-            logging.info("Reconnecting in %d seconds...", reconnect_delay)
-            time.sleep(reconnect_delay)
+def on_disconnect(cli, userdata, rc):
+    "On connection of mqtt"
+    logging.info("Disconnected with result code: %s", rc)
+    reconnect_count, reconnect_delay = 0, FIRST_RECONNECT_DELAY
+    while reconnect_count < MAX_RECONNECT_COUNT:
+        logging.info("Reconnecting in %d seconds...", reconnect_delay)
+        time.sleep(reconnect_delay)
 
-            try:
-                client.reconnect()
-                logging.info("Reconnected successfully!")
-                return
-            except Exception as err:
-                logging.error("%s. Reconnect failed. Retrying...", err)
+        try:
+            cli.reconnect()
+            logging.info("Reconnected successfully!")
+            return
+        except Exception as err:
+            logging.error("%s. Reconnect failed. Retrying...", err)
 
-            reconnect_delay *= RECONNECT_RATE
-            reconnect_delay = min(reconnect_delay, MAX_RECONNECT_DELAY)
-            reconnect_count += 1
-        logging.info("Reconnect failed after %s attempts. Exiting...", reconnect_count)
-
-    # Set Connecting Client ID
-    client = mqtt_client.Client(client_id)
-    client.on_connect = on_connect
-    client.on_disconnect = on_disconnect
-    client.connect(broker, port)
-    return client
+        reconnect_delay *= RECONNECT_RATE
+        reconnect_delay = min(reconnect_delay, MAX_RECONNECT_DELAY)
+        reconnect_count += 1
+    logging.info("Reconnect failed after %s attempts. Exiting...",
+                 reconnect_count)    # Set Connecting Client ID
 
 
-def on_message(client, userdata, msg):
+def on_message(cli, userdata, msg):
+    "Callback for mqtt message recieved"
     print(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
 
     if msg.topic == state_topic:
         animation_state.state = "ON" if msg.payload.decode() == "ON" else "OFF"
     elif msg.topic == brightness_topic:
-        try:
+        if msg.payload.decode().isdigit():
             animation_state.brightness = int(msg.payload.decode())
-        except:
-            logging.warn("Invalid brightness data: %s", msg.payload.decode())
+        else:
+            logging.warning("Invalid brightness data: %s", msg.payload.decode())
     elif msg.topic == args_topic:
         animation, data = msg.payload.decode().split(",", maxsplit=1)
         data = json.loads(data)
@@ -92,11 +91,14 @@ def on_message(client, userdata, msg):
 
 
 if __name__ == "__main__":
-    client = connect_mqtt()
+    client = mqtt_client.Client(client_id)
+    client.on_connect = on_connect
+    client.on_disconnect = on_disconnect
+    client.connect(BROKER, PORT)
     client.subscribe(state_topic)
-    client.subscribe(args_topic)
     client.subscribe(brightness_topic)
     client.subscribe(animation_topic)
+    client.subscribe(args_topic)
     client.on_message = on_message
 
     while True:

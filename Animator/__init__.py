@@ -1,3 +1,5 @@
+"NeoPixel Animation Library"
+
 import neopixel
 import time
 import random
