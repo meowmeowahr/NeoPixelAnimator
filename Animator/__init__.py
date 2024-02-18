@@ -13,9 +13,9 @@ import Animator.light_funcs as light_funcs
 
 @dataclass
 class AnimationState:
-    state: str = "OFF"
+    state: str = "ON"
     color: tuple = (255, 255, 255)
-    effect: str = "SingleColor"
+    effect: str = "Wipe"
     brightness: float = 0.0
 
 @dataclass
@@ -34,10 +34,17 @@ class FlashArgs:
     speed: float = 25
 
 @dataclass
+class WipeArgs:
+    colora: tuple = (255, 0, 0)
+    colorb: tuple = (0, 0, 255)
+    leds_iter: int = 1
+
+@dataclass
 class AnimationArgs:
     single_color: SingleColorArgs = SingleColorArgs()
     fade: FadeArgs = FadeArgs()
     flash: FlashArgs = FlashArgs()
+    wipe: WipeArgs = WipeArgs()
 
 # Set the desired FPS for your animation
 slow_fps = 5
@@ -191,25 +198,26 @@ class Animator():
             
             self.pixels.brightness = self.animation_state.brightness / 255.0
             time.sleep(1 / basic_fps)
-        elif self.animation_state.effect == "WipeRedToGreen" and self.animation_state.state == "ON":
-            if self.swipe_stage == 0:
-                last_pixel = rindex(list(self.pixels), [255, 0, 0])
-                if last_pixel is None:
-                    last_pixel = -1
+        elif self.animation_state.effect == "Wipe" and self.animation_state.state == "ON":
+            for _ in range(self.animation_args.wipe.leds_iter):
+                if self.swipe_stage == 0:
+                    last_pixel = rindex(list(self.pixels), list(self.animation_args.wipe.colora))
+                    if last_pixel is None:
+                        last_pixel = -1
 
-                if last_pixel + 2 > self.num_pixels:
-                    self.swipe_stage = 1
+                    if last_pixel + 2 > self.num_pixels:
+                        self.swipe_stage = 1
+                    else:
+                        self.pixels[last_pixel + 1] = self.animation_args.wipe.colora
                 else:
-                    self.pixels[last_pixel + 1] = (255, 0, 0)
-            else:
-                last_pixel = rindex(list(self.pixels), [0, 255, 0])
-                if last_pixel == None:
-                    last_pixel = -1
+                    last_pixel = rindex(list(self.pixels), list(self.animation_args.wipe.colorb))
+                    if last_pixel == None:
+                        last_pixel = -1
 
-                if last_pixel + 2 > self.num_pixels:
-                    self.swipe_stage = 0
-                else:
-                    self.pixels[last_pixel + 1] = (0, 255, 0)
+                    if last_pixel + 2 > self.num_pixels:
+                        self.swipe_stage = 0
+                    else:
+                        self.pixels[last_pixel + 1] = self.animation_args.wipe.colorb
 
             self.pixels.brightness = self.animation_state.brightness / 255.0
             time.sleep(1 / fast_fps)
