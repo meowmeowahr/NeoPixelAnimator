@@ -9,12 +9,12 @@ from typing import Iterable
 import Animator.light_funcs as light_funcs
 
 
+@dataclass
 class AnimationState:
-    def __init__(self):
-        self.state = "OFF"
-        self.color = {"r": 255, "g": 255, "b": 255}
-        self.effect = "SingleColor"
-        self.brightness = 0.0
+    state: str = "OFF"
+    color: tuple = (255, 255, 255)
+    effect: str = "SingleColor"
+    brightness: float = 0.0
 
 @dataclass
 class SingleColorArgs:
@@ -152,12 +152,12 @@ class Animator():
             time.sleep(1 / basic_fps)
         elif self.animation_state.effect == "Fade" and self.animation_state.state == "ON":
             if fade_stage == 0:
-                self.pixels.fill((self.animation_state.color["r"] * animation_step // 255, self.animation_state.color["g"] * animation_step // 255, self.animation_state.color["b"] * animation_step // 255))
+                self.pixels.fill((self.animation_state.color[0] * animation_step // 255, self.animation_state.color[1] * animation_step // 255, self.animation_state.color[2] * animation_step // 255))
                 self.pixels.show()
                 if animation_step == 255:
                     fade_stage = 1
             else:
-                self.pixels.fill((self.animation_state.color["r"] * (255 - animation_step) // 255, self.animation_state.color["g"] * (255 - animation_step) // 255, self.animation_state.color["b"] * (255 - animation_step) // 255))
+                self.pixels.fill((self.animation_state.color[0] * (255 - animation_step) // 255, self.animation_state.color[1] * (255 - animation_step) // 255, self.animation_state.color[2] * (255 - animation_step) // 255))
                 self.pixels.show()
                 if animation_step == 255:
                     fade_stage = 0
