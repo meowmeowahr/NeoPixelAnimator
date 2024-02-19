@@ -41,6 +41,7 @@ class FadeArgs:
 
 @dataclass
 class FlashArgs:
+    "Flash Animation options"
     colora: tuple = (255, 0, 0)
     colorb: tuple = (0, 0, 0)
     speed: float = 25
@@ -48,6 +49,7 @@ class FlashArgs:
 
 @dataclass
 class WipeArgs:
+    "Wipe Animation options"
     colora: tuple = (255, 0, 0)
     colorb: tuple = (0, 0, 255)
     leds_iter: int = 1
@@ -55,6 +57,7 @@ class WipeArgs:
 
 @dataclass
 class AnimationArgs:
+    "Options for animations"
     single_color: SingleColorArgs = SingleColorArgs()
     fade: FadeArgs = FadeArgs()
     flash: FlashArgs = FlashArgs()
