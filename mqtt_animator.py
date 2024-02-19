@@ -41,10 +41,11 @@ reconnect_rate: int = mqtt_reconnection.get('reconnect_rate', 2)
 max_reconnect_count: int = mqtt_reconnection.get('max_reconnect_count', 12)
 max_reconnect_delay: int = mqtt_reconnection.get('max_reconnect_delay', 60)
 
+# NeoPixel driver config
 driver_config: dict = configuration.get('driver', {})
 
-num_pixels: int = driver_config.get('num_pixels', 100)
-pixel_pin = getattr(board, 'D18') # Change this to the pin your NeoPixels are connected to
+num_pixels: int = driver_config.get('num_pixels', 100) # strip length
+pixel_pin = getattr(board, driver_config.get('pin', 'D18')) # rpi gpio pin
 
 animation_args = Animator.AnimationArgs()
 animation_args.single_color.color = [0, 255, 0]
