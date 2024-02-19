@@ -13,9 +13,9 @@ import Animator.light_funcs as light_funcs
 
 @dataclass
 class AnimationState:
-    state: str = "ON"
+    state: str = "OFF"
     color: tuple = (255, 255, 255)
-    effect: str = "Wipe"
+    effect: str = "SingleColor"
     brightness: float = 0.0
 
 @dataclass
