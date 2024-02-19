@@ -3,23 +3,25 @@
 import json
 import logging
 import random
+import sys
 import time
 import threading
+import traceback
 
 import board
 import neopixel
+import yaml
 from paho.mqtt import client as mqtt_client
 
 import Animator
 
-BROKER = 'localhost'
-PORT = 1883
-client_id = f'python-mqtt-{random.randint(0, 1000)}'
-
-state_topic = "MQTTAnimator/state"
-brightness_topic = "MQTTAnimator/brightness"
-args_topic = "MQTTAnimator/args"
-animation_topic = "MQTTAnimator/animation"
+with open("config.yaml", encoding="utf-8") as stream:
+    try:
+        configuration = yaml.safe_load(stream)
+    except yaml.YAMLError as exc:
+        traceback.print_exc()
+        logging.critical("YAML Parsing Error, %s", exc)
+        sys.exit(0)
 
 FIRST_RECONNECT_DELAY = 1
 RECONNECT_RATE = 2
@@ -94,11 +96,23 @@ def on_message(cli, userdata, msg):
 
 
 if __name__ == "__main__":
+    mqtt_config: dict = configuration.get('mqtt', {})
+    mqtt_topics: dict = mqtt_config.get('topics', {})
+
+    mqtt_borker: str = mqtt_config.get('host', 'localhost')
+    mqtt_port: int = mqtt_config.get('port', 1883)
+    client_id = f'mqtt-animator-{random.randint(0, 1000)}'
+
+    state_topic: str = mqtt_topics.get('state_topic', 'MQTTAnimator/state')
+    brightness_topic: str = mqtt_topics.get('brightness_topic', 'MQTTAnimator/brightness')
+    args_topic: str = mqtt_topics.get('args_topic', 'MQTTAnimator/args')
+    animation_topic: str = mqtt_topics.get('animation_topic', 'MQTTAnimator/animation')
+
     client = mqtt_client.Client(client_id)
     client.on_connect = on_connect
     client.on_disconnect = on_disconnect
     client.on_message = on_message
-    client.connect(BROKER, PORT)
+    client.connect(mqtt_borker, mqtt_port)
     client.subscribe(state_topic)
     client.subscribe(brightness_topic)
     client.subscribe(animation_topic)

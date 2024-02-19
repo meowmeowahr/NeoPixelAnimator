@@ -1,0 +1,8 @@
+mqtt:
+  host: "localhost"
+  port: 1883
+  topics:
+    state_topic: "MQTTAnimator/state"
+    brightness_topic: "MQTTAnimator/brightness"
+    args_topic: "MQTTAnimator/args"
+    animation_topic: "MQTTAnimator/animation"
