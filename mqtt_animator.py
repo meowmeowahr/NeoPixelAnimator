@@ -68,7 +68,7 @@ pixels = neopixel.NeoPixel(
 animator = animator.Animator(pixels, num_pixels, animation_state, animation_args)
 
 
-def on_connect(cli, userdata, flags, rc):
+def on_connect(_, __, ___, rc):
     "On disconnection of mqtt"
     if rc == 0:
         logging.info("MQTT Connection Success")
@@ -76,7 +76,7 @@ def on_connect(cli, userdata, flags, rc):
         logging.critical("Failed to connect, return code %d\n", rc)
 
 
-def on_disconnect(cli, userdata, rc):
+def on_disconnect(cli, _, rc):
     "On connection of mqtt"
     logging.info("Disconnected with result code: %s", rc)
     reconnect_count, reconnect_delay = 0, first_reconnect_delay
@@ -99,7 +99,7 @@ def on_disconnect(cli, userdata, rc):
     )  # Set Connecting Client ID
 
 
-def on_message(cli, userdata, msg):
+def on_message(_, __, msg):
     "Callback for mqtt message recieved"
     print(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
 

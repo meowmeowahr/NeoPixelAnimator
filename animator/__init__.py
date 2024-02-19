@@ -9,6 +9,9 @@ from typing import Iterable
 import neopixel
 
 import animator.light_funcs as light_funcs
+from animator.light_funcs import square_wave
+from animator.light_funcs import rindex
+from animator.light_funcs import mix_colors
 
 COLORS = [
     (255, 0, 0),  # Red
@@ -22,6 +25,7 @@ COLORS = [
 
 @dataclass
 class AnimationState:
+    "State of animations and neopixels"
     state: str = "OFF"
     color: tuple = (255, 255, 255)
     effect: str = "SingleColor"
@@ -30,11 +34,13 @@ class AnimationState:
 
 @dataclass
 class SingleColorArgs:
+    "Single Color mode options"
     color: tuple = (255, 0, 0)
 
 
 @dataclass
 class FadeArgs:
+    "Fade Animation options"
     colora: tuple = (255, 0, 0)
     colorb: tuple = (0, 0, 0)
 
@@ -65,15 +71,23 @@ class AnimationArgs:
 
 
 # Set the desired FPS for your animation
-slow_fps = 5
-basic_fps = 30
-regular_fps = 45
-fast_fps = 60
-ufast_fps = 120
+SLOW_FPS = 5
+BASIC_FPS = 30
+REGULAR_FPS = 45
+FAST_FPS = 60
+UFAST_FPS = 120
 
 
 # Animation-specific functions
-def generate_color_pattern(length):
+def generate_color_pattern(length: int) -> list:
+    """Generate list of colors for ColoredLights animation
+
+    Args:
+        length (int): Length of output
+
+    Returns:
+        list: Output
+    """
     colors = [
         (255, 0, 0),  # Red
         (0, 255, 0),  # Green
@@ -90,46 +104,8 @@ def generate_color_pattern(length):
     return pattern[:length]
 
 
-def mix_colors(color1, color2, position):
-    """
-    Mix two RGB colors based on a position value.
-
-    Parameters:
-    - color1: Tuple representing the first RGB color (e.g., (255, 0, 0) for red).
-    - color2: Tuple representing the second RGB color.
-    - position: A value between 0 and 1 indicating the position between the two colors.
-
-    Returns:
-    - A tuple representing the resulting mixed color.
-    """
-    mixed_color = tuple(
-        int((1 - position) * c1 + position * c2) for c1, c2 in zip(color1, color2)
-    )
-    return mixed_color
-
-
-def rindex(lst, value):
-    lst.reverse()
-    try:
-        i = lst.index(value)
-    except ValueError:
-        return None
-    lst.reverse()
-    return len(lst) - i - 1
-
-
-def square_wave(t, period, amplitude):
-    # Calculate the remainder when t is divided by T
-    remainder = t % period
-
-    # Determine the value of the square wave based on the remainder
-    if remainder < period / 2:
-        return amplitude
-    else:
-        return -amplitude
-
-
 class Animator:
+    """NeoPixel Animation class"""
     def __init__(
         self,
         pixels: neopixel.NeoPixel,
@@ -168,7 +144,7 @@ class Animator:
         ):
             self.pixels.fill(self.animation_args.single_color.color)
             self.pixels.brightness = self.animation_state.brightness / 255.0
-            time.sleep(1 / basic_fps)
+            time.sleep(1 / BASIC_FPS)
         elif (
             self.animation_state.effect == "Rainbow"
             and self.animation_state.state == "ON"
@@ -177,7 +153,7 @@ class Animator:
                 pixel_index = (i * 256 // self.num_pixels) + self.animation_step
                 self.pixels[i] = light_funcs.wheel(pixel_index & 255)
             self.pixels.brightness = self.animation_state.brightness / 255.0
-            time.sleep(1 / fast_fps)
+            time.sleep(1 / FAST_FPS)
         elif (
             self.animation_state.effect == "GlitterRainbow"
             and self.animation_state.state == "ON"
@@ -188,14 +164,14 @@ class Animator:
             self.pixels.brightness = self.animation_state.brightness / 255.0
             led = random.randint(0, self.num_pixels - 1)
             self.pixels[led] = (255, 255, 255)
-            time.sleep(1 / fast_fps)
+            time.sleep(1 / FAST_FPS)
         elif (
             self.animation_state.effect == "Colorloop"
             and self.animation_state.state == "ON"
         ):
             self.pixels.fill(light_funcs.wheel(self.animation_step))
             self.pixels.brightness = self.animation_state.brightness / 255.0
-            time.sleep(1 / fast_fps)
+            time.sleep(1 / FAST_FPS)
         elif (
             self.animation_state.effect == "Magic"
             and self.animation_state.state == "ON"
@@ -207,7 +183,7 @@ class Animator:
                 color = light_funcs.map_range(color, -1, 1, 120, 200)
                 self.pixels[i] = light_funcs.wheel(int(color) & 255)
             self.pixels.brightness = self.animation_state.brightness / 255.0
-            time.sleep(1 / basic_fps)
+            time.sleep(1 / BASIC_FPS)
         elif (
             self.animation_state.effect == "Fire" and self.animation_state.state == "ON"
         ):
@@ -218,7 +194,7 @@ class Animator:
                 color = light_funcs.map_range(color, -1, 1, 70, 85)
                 self.pixels[i] = light_funcs.wheel(int(color) & 255)
             self.pixels.brightness = self.animation_state.brightness / 255.0
-            time.sleep(1 / regular_fps)
+            time.sleep(1 / REGULAR_FPS)
         elif (
             self.animation_state.effect == "ColoredLights"
             and self.animation_state.state == "ON"
@@ -226,7 +202,7 @@ class Animator:
             for index, color in enumerate(generate_color_pattern(self.num_pixels)):
                 self.pixels[index - 1] = color
             self.pixels.brightness = self.animation_state.brightness / 255.0
-            time.sleep(1 / basic_fps)
+            time.sleep(1 / BASIC_FPS)
         elif (
             self.animation_state.effect == "Fade" and self.animation_state.state == "ON"
         ):
@@ -241,7 +217,7 @@ class Animator:
             )
             self.pixels.show()
             self.pixels.brightness = self.animation_state.brightness / 255.0
-            time.sleep(1 / fast_fps)
+            time.sleep(1 / FAST_FPS)
         elif (
             self.animation_state.effect == "Flash"
             and self.animation_state.state == "ON"
@@ -255,7 +231,7 @@ class Animator:
                 self.pixels.fill(self.animation_args.flash.colorb)
 
             self.pixels.brightness = self.animation_state.brightness / 255.0
-            time.sleep(1 / basic_fps)
+            time.sleep(1 / BASIC_FPS)
         elif (
             self.animation_state.effect == "Wipe" and self.animation_state.state == "ON"
         ):
@@ -284,7 +260,7 @@ class Animator:
                         self.pixels[last_pixel + 1] = self.animation_args.wipe.colorb
 
             self.pixels.brightness = self.animation_state.brightness / 255.0
-            time.sleep(1 / fast_fps)
+            time.sleep(1 / FAST_FPS)
         elif (
             self.animation_state.effect == "Random"
             and self.animation_state.state == "ON"
@@ -295,7 +271,7 @@ class Animator:
                 )
 
             self.pixels.brightness = self.animation_state.brightness / 255.0
-            time.sleep(1 / slow_fps)
+            time.sleep(1 / SLOW_FPS)
         elif (
             self.animation_state.effect == "RandomColor"
             and self.animation_state.state == "ON"
@@ -304,11 +280,11 @@ class Animator:
                 self.pixels[i] = COLORS[random.randint(0, 5)]
 
             self.pixels.brightness = self.animation_state.brightness / 255.0
-            time.sleep(1 / slow_fps)
+            time.sleep(1 / SLOW_FPS)
         else:  # off state / animation unknown
             self.pixels.fill((0, 0, 0))
             self.pixels.brightness = 0.0
-            time.sleep(1 / basic_fps)
+            time.sleep(1 / BASIC_FPS)
 
         self.pixels.show()
         self.animation_step += 1

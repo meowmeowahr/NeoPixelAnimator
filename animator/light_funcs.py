@@ -89,3 +89,61 @@ def wheel(pos: float) -> tuple:
         g = int(pos * 3)
         b = int(255 - pos * 3)
     return (r, g, b)
+
+
+def square_wave(t, period, amplitude):
+    """Generate square wave
+
+    Args:
+        t (float): X input
+        period (float): Period of square wave
+        amplitude (float): Amplitude of wave
+
+    Returns:
+        float: Y output
+    """
+    # Calculate the remainder when t is divided by T
+    remainder = t % period
+
+    # Determine the value of the square wave based on the remainder
+    if remainder < period / 2:
+        return amplitude
+    else:
+        return -amplitude
+
+
+def rindex(lst: list, value: any) -> int:
+    """Get last occurrence of object in list
+
+    Args:
+        lst (list): List to search
+        value (any): obect to find last occurrence of
+
+    Returns:
+        int: Last index
+    """
+    lst.reverse()
+    try:
+        i = lst.index(value)
+    except ValueError:
+        return None
+    lst.reverse()
+    return len(lst) - i - 1
+
+
+def mix_colors(color1, color2, position):
+    """
+    Mix two RGB colors based on a position value.
+
+    Parameters:
+    - color1: Tuple representing the first RGB color (e.g., (255, 0, 0) for red).
+    - color2: Tuple representing the second RGB color.
+    - position: A value between 0 and 1 indicating the position between the two colors.
+
+    Returns:
+    - A tuple representing the resulting mixed color.
+    """
+    mixed_color = tuple(
+        int((1 - position) * c1 + position * c2) for c1, c2 in zip(color1, color2)
+    )
+    return mixed_color
