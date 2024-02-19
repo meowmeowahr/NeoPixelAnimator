@@ -23,10 +23,23 @@ with open("config.yaml", encoding="utf-8") as stream:
         logging.critical("YAML Parsing Error, %s", exc)
         sys.exit(0)
 
-FIRST_RECONNECT_DELAY = 1
-RECONNECT_RATE = 2
-MAX_RECONNECT_COUNT = 12
-MAX_RECONNECT_DELAY = 60
+mqtt_config: dict = configuration.get('mqtt', {})
+mqtt_topics: dict = mqtt_config.get('topics', {})
+mqtt_reconnection: dict = mqtt_config.get('reconnection', {})
+
+mqtt_borker: str = mqtt_config.get('host', 'localhost')
+mqtt_port: int = mqtt_config.get('port', 1883)
+client_id = f'mqtt-animator-{random.randint(0, 1000)}'
+
+state_topic: str = mqtt_topics.get('state_topic', 'MQTTAnimator/state')
+brightness_topic: str = mqtt_topics.get('brightness_topic', 'MQTTAnimator/brightness')
+args_topic: str = mqtt_topics.get('args_topic', 'MQTTAnimator/args')
+animation_topic: str = mqtt_topics.get('animation_topic', 'MQTTAnimator/animation')
+
+first_reconnect_delay: int = mqtt_reconnection.get('first_reconnect_delay', 1)
+reconnect_rate: int = mqtt_reconnection.get('reconnect_rate', 2)
+max_reconnect_count: int = mqtt_reconnection.get('max_reconnect_count', 12)
+max_reconnect_delay: int = mqtt_reconnection.get('max_reconnect_delay', 60)
 
 # Define the number of NeoPixels and pin
 num_pixels = 50
@@ -46,15 +59,15 @@ animator = Animator.Animator(pixels, num_pixels, animation_state, animation_args
 def on_connect(cli, userdata, flags, rc):
     "On disconnection of mqtt"
     if rc == 0:
-        print("Connected to MQTT Broker!")
+        logging.info("MQTT Connection Success")
     else:
-        print("Failed to connect, return code %d\n", rc)
+        logging.critical("Failed to connect, return code %d\n", rc)
 
 def on_disconnect(cli, userdata, rc):
     "On connection of mqtt"
     logging.info("Disconnected with result code: %s", rc)
-    reconnect_count, reconnect_delay = 0, FIRST_RECONNECT_DELAY
-    while reconnect_count < MAX_RECONNECT_COUNT:
+    reconnect_count, reconnect_delay = 0, first_reconnect_delay
+    while reconnect_count < max_reconnect_count:
         logging.info("Reconnecting in %d seconds...", reconnect_delay)
         time.sleep(reconnect_delay)
 
@@ -62,11 +75,11 @@ def on_disconnect(cli, userdata, rc):
             cli.reconnect()
             logging.info("Reconnected successfully!")
             return
-        except Exception as err:
+        except ConnectionError as err:
             logging.error("%s. Reconnect failed. Retrying...", err)
 
-        reconnect_delay *= RECONNECT_RATE
-        reconnect_delay = min(reconnect_delay, MAX_RECONNECT_DELAY)
+        reconnect_delay *= reconnect_rate
+        reconnect_delay = min(reconnect_delay, max_reconnect_delay)
         reconnect_count += 1
     logging.info("Reconnect failed after %s attempts. Exiting...",
                  reconnect_count)    # Set Connecting Client ID
@@ -96,18 +109,6 @@ def on_message(cli, userdata, msg):
 
 
 if __name__ == "__main__":
-    mqtt_config: dict = configuration.get('mqtt', {})
-    mqtt_topics: dict = mqtt_config.get('topics', {})
-
-    mqtt_borker: str = mqtt_config.get('host', 'localhost')
-    mqtt_port: int = mqtt_config.get('port', 1883)
-    client_id = f'mqtt-animator-{random.randint(0, 1000)}'
-
-    state_topic: str = mqtt_topics.get('state_topic', 'MQTTAnimator/state')
-    brightness_topic: str = mqtt_topics.get('brightness_topic', 'MQTTAnimator/brightness')
-    args_topic: str = mqtt_topics.get('args_topic', 'MQTTAnimator/args')
-    animation_topic: str = mqtt_topics.get('animation_topic', 'MQTTAnimator/animation')
-
     client = mqtt_client.Client(client_id)
     client.on_connect = on_connect
     client.on_disconnect = on_disconnect

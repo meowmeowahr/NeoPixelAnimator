@@ -6,3 +6,8 @@ mqtt:
     brightness_topic: "MQTTAnimator/brightness"
     args_topic: "MQTTAnimator/args"
     animation_topic: "MQTTAnimator/animation"
+  reconnection:
+    first_reconnect_delay: 1
+    reconnect_rate: 2
+    max_reconnect_count: 12
+    max_reconnect_delay: 60
