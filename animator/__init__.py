@@ -8,10 +8,7 @@ from typing import Iterable
 
 import neopixel
 
-import animator.light_funcs as light_funcs
-from animator.light_funcs import square_wave
-from animator.light_funcs import rindex
-from animator.light_funcs import mix_colors
+from animator import light_funcs
 
 COLORS = [
     (255, 0, 0),  # Red
@@ -122,7 +119,6 @@ class Animator:
         self.animation_step = 1
         self.previous_animation = ""
 
-        self.fade_stage = 0
         self.swipe_stage = 0
 
     def cycle(self) -> None:
@@ -134,7 +130,6 @@ class Animator:
 
             self.previous_animation = self.animation_state.effect
             self.animation_step = 1
-            self.fade_stage = 0
             self.swipe_stage = 0
 
         # Set NeoPixels based on the "SingleColor" effect
@@ -208,7 +203,7 @@ class Animator:
         ):
             self.pixels.fill(
                 light_funcs.round_tuple(
-                    mix_colors(
+                    light_funcs.mix_colors(
                         self.animation_args.fade.colora,
                         self.animation_args.fade.colorb,
                         math.sin((self.animation_step / 255) * math.pi),
@@ -223,7 +218,7 @@ class Animator:
             and self.animation_state.state == "ON"
         ):
             if (
-                square_wave(self.animation_step, self.animation_args.flash.speed, 1)
+                light_funcs.square_wave(self.animation_step, self.animation_args.flash.speed, 1)
                 == 1
             ):
                 self.pixels.fill(self.animation_args.flash.colora)
@@ -237,7 +232,7 @@ class Animator:
         ):
             for _ in range(self.animation_args.wipe.leds_iter):
                 if self.swipe_stage == 0:
-                    last_pixel = rindex(
+                    last_pixel = light_funcs.rindex(
                         list(self.pixels), list(self.animation_args.wipe.colora)
                     )
                     if last_pixel is None:
@@ -248,7 +243,7 @@ class Animator:
                     else:
                         self.pixels[last_pixel + 1] = self.animation_args.wipe.colora
                 else:
-                    last_pixel = rindex(
+                    last_pixel = light_funcs.rindex(
                         list(self.pixels), list(self.animation_args.wipe.colorb)
                     )
                     if last_pixel is None:

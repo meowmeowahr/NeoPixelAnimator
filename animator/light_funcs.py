@@ -108,8 +108,7 @@ def square_wave(t, period, amplitude):
     # Determine the value of the square wave based on the remainder
     if remainder < period / 2:
         return amplitude
-    else:
-        return -amplitude
+    return -amplitude
 
 
 def rindex(lst: list, value: any) -> int:
