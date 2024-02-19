@@ -41,8 +41,9 @@ reconnect_rate: int = mqtt_reconnection.get('reconnect_rate', 2)
 max_reconnect_count: int = mqtt_reconnection.get('max_reconnect_count', 12)
 max_reconnect_delay: int = mqtt_reconnection.get('max_reconnect_delay', 60)
 
-# Define the number of NeoPixels and pin
-num_pixels = 50
+driver_config: dict = configuration.get('driver', {})
+
+num_pixels: int = driver_config.get('num_pixels', 100)
 pixel_pin = getattr(board, 'D18') # Change this to the pin your NeoPixels are connected to
 
 animation_args = Animator.AnimationArgs()

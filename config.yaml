@@ -11,3 +11,6 @@ mqtt:
     reconnect_rate: 2
     max_reconnect_count: 12
     max_reconnect_delay: 60
+
+driver:
+  num_pixels: 50

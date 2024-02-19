@@ -94,9 +94,9 @@ def rindex(lst, value):
     lst.reverse()
     return len(lst) - i - 1
 
-def square_wave(time, period, amplitude):
+def square_wave(t, period, amplitude):
     # Calculate the remainder when t is divided by T
-    remainder = time % period
+    remainder = t % period
     
     # Determine the value of the square wave based on the remainder
     if remainder < period / 2:
@@ -237,7 +237,7 @@ class Animator():
             self.pixels.fill((0, 0, 0))
             self.pixels.brightness = 0.0
             time.sleep(1 / basic_fps)
-        
+
         self.pixels.show()
         self.animation_step += 1
         if self.animation_step > 255:
