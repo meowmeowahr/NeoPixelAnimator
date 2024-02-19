@@ -18,3 +18,4 @@ mqtt:
 driver:
   num_pixels: 50
   pin: "D18"
+  order: "RGB"

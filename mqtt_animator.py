@@ -51,6 +51,7 @@ driver_config: dict = configuration.get("driver", {})
 
 num_pixels: int = driver_config.get("num_pixels", 100)  # strip length
 pixel_pin = getattr(board, driver_config.get("pin", "D18"))  # rpi gpio pin
+pixel_order = getattr(board, driver_config.get("order", "RGB"))  # Color order
 
 animation_args = animator.AnimationArgs()
 animation_args.single_color.color = [0, 255, 0]
@@ -60,7 +61,7 @@ animation_state.brightness = 100
 
 # Create NeoPixel object
 pixels = neopixel.NeoPixel(
-    pixel_pin, num_pixels, brightness=1.0, auto_write=False, pixel_order="RGB"
+    pixel_pin, num_pixels, brightness=1.0, auto_write=False, pixel_order=pixel_order
 )
 animator = animator.Animator(pixels, num_pixels, animation_state, animation_args)
 
