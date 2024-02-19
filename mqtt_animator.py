@@ -24,33 +24,33 @@ with open("config.yaml", encoding="utf-8") as stream:
         logging.critical("YAML Parsing Error, %s", exc)
         sys.exit(0)
 
-logging_config: dict = configuration.get('logging', {})
-logging_level: int = logging_config.get('level', 20)
+logging_config: dict = configuration.get("logging", {})
+logging_level: int = logging_config.get("level", 20)
 logging.basicConfig(level=logging_level)
 
-mqtt_config: dict = configuration.get('mqtt', {})
-mqtt_topics: dict = mqtt_config.get('topics', {})
-mqtt_reconnection: dict = mqtt_config.get('reconnection', {})
+mqtt_config: dict = configuration.get("mqtt", {})
+mqtt_topics: dict = mqtt_config.get("topics", {})
+mqtt_reconnection: dict = mqtt_config.get("reconnection", {})
 
-mqtt_borker: str = mqtt_config.get('host', 'localhost')
-mqtt_port: int = mqtt_config.get('port', 1883)
-client_id = f'mqtt-animator-{random.randint(0, 1000)}'
+mqtt_borker: str = mqtt_config.get("host", "localhost")
+mqtt_port: int = mqtt_config.get("port", 1883)
+client_id = f"mqtt-animator-{random.randint(0, 1000)}"
 
-state_topic: str = mqtt_topics.get('state_topic', 'MQTTAnimator/state')
-brightness_topic: str = mqtt_topics.get('brightness_topic', 'MQTTAnimator/brightness')
-args_topic: str = mqtt_topics.get('args_topic', 'MQTTAnimator/args')
-animation_topic: str = mqtt_topics.get('animation_topic', 'MQTTAnimator/animation')
+state_topic: str = mqtt_topics.get("state_topic", "MQTTAnimator/state")
+brightness_topic: str = mqtt_topics.get("brightness_topic", "MQTTAnimator/brightness")
+args_topic: str = mqtt_topics.get("args_topic", "MQTTAnimator/args")
+animation_topic: str = mqtt_topics.get("animation_topic", "MQTTAnimator/animation")
 
-first_reconnect_delay: int = mqtt_reconnection.get('first_reconnect_delay', 1)
-reconnect_rate: int = mqtt_reconnection.get('reconnect_rate', 2)
-max_reconnect_count: int = mqtt_reconnection.get('max_reconnect_count', 12)
-max_reconnect_delay: int = mqtt_reconnection.get('max_reconnect_delay', 60)
+first_reconnect_delay: int = mqtt_reconnection.get("first_reconnect_delay", 1)
+reconnect_rate: int = mqtt_reconnection.get("reconnect_rate", 2)
+max_reconnect_count: int = mqtt_reconnection.get("max_reconnect_count", 12)
+max_reconnect_delay: int = mqtt_reconnection.get("max_reconnect_delay", 60)
 
 # NeoPixel driver config
-driver_config: dict = configuration.get('driver', {})
+driver_config: dict = configuration.get("driver", {})
 
-num_pixels: int = driver_config.get('num_pixels', 100) # strip length
-pixel_pin = getattr(board, driver_config.get('pin', 'D18')) # rpi gpio pin
+num_pixels: int = driver_config.get("num_pixels", 100)  # strip length
+pixel_pin = getattr(board, driver_config.get("pin", "D18"))  # rpi gpio pin
 
 animation_args = animator.AnimationArgs()
 animation_args.single_color.color = [0, 255, 0]
@@ -59,9 +59,11 @@ animation_state = animator.AnimationState()
 animation_state.brightness = 100
 
 # Create NeoPixel object
-pixels = neopixel.NeoPixel(pixel_pin, num_pixels, brightness=1.0,
-                           auto_write=False, pixel_order="RGB")
+pixels = neopixel.NeoPixel(
+    pixel_pin, num_pixels, brightness=1.0, auto_write=False, pixel_order="RGB"
+)
 animator = animator.Animator(pixels, num_pixels, animation_state, animation_args)
+
 
 def on_connect(cli, userdata, flags, rc):
     "On disconnection of mqtt"
@@ -69,6 +71,7 @@ def on_connect(cli, userdata, flags, rc):
         logging.info("MQTT Connection Success")
     else:
         logging.critical("Failed to connect, return code %d\n", rc)
+
 
 def on_disconnect(cli, userdata, rc):
     "On connection of mqtt"
@@ -88,8 +91,9 @@ def on_disconnect(cli, userdata, rc):
         reconnect_delay *= reconnect_rate
         reconnect_delay = min(reconnect_delay, max_reconnect_delay)
         reconnect_count += 1
-    logging.info("Reconnect failed after %s attempts. Exiting...",
-                 reconnect_count)    # Set Connecting Client ID
+    logging.info(
+        "Reconnect failed after %s attempts. Exiting...", reconnect_count
+    )  # Set Connecting Client ID
 
 
 def on_message(cli, userdata, msg):
@@ -126,7 +130,9 @@ if __name__ == "__main__":
     client.subscribe(animation_topic)
     client.subscribe(args_topic)
 
-    threading.Thread(target=client.loop_forever, name="MQTT_Updater", daemon=True).start()
+    threading.Thread(
+        target=client.loop_forever, name="MQTT_Updater", daemon=True
+    ).start()
 
     while True:
         animator.cycle()

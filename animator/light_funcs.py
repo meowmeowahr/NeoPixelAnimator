@@ -1,5 +1,6 @@
 "Useful functions for animator"
 
+
 def round_tuple(t: tuple, n=None) -> tuple:
     """Round ALL contents of tuple
 
@@ -12,6 +13,7 @@ def round_tuple(t: tuple, n=None) -> tuple:
     """
     return tuple(map(lambda x: round(x, n), t))
 
+
 def multiply_tuple(t: tuple, n: float) -> tuple:
     """Multiply ALL contents of tuple
 
@@ -22,7 +24,8 @@ def multiply_tuple(t: tuple, n: float) -> tuple:
     Returns:
         tuple: Output
     """
-    return tuple(map(lambda x: x*n, t))
+    return tuple(map(lambda x: x * n, t))
+
 
 def color_fade(color_a: tuple, color_b: tuple, t: float) -> tuple:
     """Fade between two colors
@@ -35,11 +38,14 @@ def color_fade(color_a: tuple, color_b: tuple, t: float) -> tuple:
     Returns:
         tuple: Output color
     """
-    def lerp(begin,end,t): # linear interpolation
-        return begin + t*(end-begin)
-    (r1,g1,b1) = color_a
-    (r2,g2,b2) = color_b
-    return (lerp(r1,r2,t), lerp(g1,g2,t), lerp(b1,b2,t))
+
+    def lerp(begin, end, t):  # linear interpolation
+        return begin + t * (end - begin)
+
+    (r1, g1, b1) = color_a
+    (r2, g2, b2) = color_b
+    return (lerp(r1, r2, t), lerp(g1, g2, t), lerp(b1, b2, t))
+
 
 def map_range(x: int, in_min: int, in_max: int, out_min: int, out_max: int):
     """Map bounds of input to bounds of output
@@ -55,6 +61,7 @@ def map_range(x: int, in_min: int, in_max: int, out_min: int, out_max: int):
         int: Output value
     """
     return (x - in_min) * (out_max - out_min) // (in_max - in_min) + out_min
+
 
 def wheel(pos: float) -> tuple:
     """Get color form color wheel
