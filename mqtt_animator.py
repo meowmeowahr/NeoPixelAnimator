@@ -24,10 +24,12 @@ with open("config.yaml", encoding="utf-8") as stream:
         logging.critical("YAML Parsing Error, %s", exc)
         sys.exit(0)
 
+# logging config
 logging_config: dict = configuration.get("logging", {})
 logging_level: int = logging_config.get("level", 20)
 logging.basicConfig(level=logging_level)
 
+# mqtt config
 mqtt_config: dict = configuration.get("mqtt", {})
 mqtt_topics: dict = mqtt_config.get("topics", {})
 mqtt_reconnection: dict = mqtt_config.get("reconnection", {})
@@ -51,7 +53,7 @@ driver_config: dict = configuration.get("driver", {})
 
 num_pixels: int = driver_config.get("num_pixels", 100)  # strip length
 pixel_pin = getattr(board, driver_config.get("pin", "D18"))  # rpi gpio pin
-pixel_order = getattr(board, driver_config.get("order", "RGB"))  # Color order
+pixel_order = driver_config.get("order", "RGB")  # Color order
 
 animation_args = animator.AnimationArgs()
 animation_args.single_color.color = [0, 255, 0]
@@ -121,6 +123,7 @@ def on_message(cli, userdata, msg):
 
 
 if __name__ == "__main__":
+    # connect to mqtt server
     client = mqtt_client.Client(client_id)
     client.on_connect = on_connect
     client.on_disconnect = on_disconnect
@@ -131,6 +134,7 @@ if __name__ == "__main__":
     client.subscribe(animation_topic)
     client.subscribe(args_topic)
 
+    # run mqtt background tasks in thread
     threading.Thread(
         target=client.loop_forever, name="MQTT_Updater", daemon=True
     ).start()
