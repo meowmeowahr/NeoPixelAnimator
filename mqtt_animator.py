@@ -15,6 +15,7 @@ from paho.mqtt import client as mqtt_client
 
 import Animator
 
+# Import yaml config
 with open("config.yaml", encoding="utf-8") as stream:
     try:
         configuration = yaml.safe_load(stream)
@@ -22,6 +23,10 @@ with open("config.yaml", encoding="utf-8") as stream:
         traceback.print_exc()
         logging.critical("YAML Parsing Error, %s", exc)
         sys.exit(0)
+
+logging_config: dict = configuration.get('logging', {})
+logging_level: int = logging_config.get('level', 20)
+logging.basicConfig(level=logging_level)
 
 mqtt_config: dict = configuration.get('mqtt', {})
 mqtt_topics: dict = mqtt_config.get('topics', {})
