@@ -1,18 +1,22 @@
-import neopixel
-import board
+"Very basic example on how to use animator module"
+
 import time
 
-import Animator
+import neopixel
+import board
+
+import animator
 
 # Define the number of NeoPixels and pin
-num_pixels = 50
+NUM_PIXELS = 50
 pixel_pin = board.D18  # Change this to the pin your NeoPixels are connected to
 
 # Create NeoPixel object
-pixels = neopixel.NeoPixel(pixel_pin, num_pixels, brightness=1.0, auto_write=False, pixel_order="RGB")
-animation_args = Animator.AnimationArgs()
-animation_state = Animator.AnimationState()
-animator = Animator.Animator(pixels, num_pixels, animation_state, animation_args)
+pixels = neopixel.NeoPixel(pixel_pin, NUM_PIXELS, brightness=1.0,
+                           auto_write=False, pixel_order="RGB")
+animation_args = animator.AnimationArgs()
+animation_state = animator.AnimationState()
+animator = animator.Animator(pixels, NUM_PIXELS, animation_state, animation_args)
 
 animation_state.brightness = 127
 animation_state.state = "ON"

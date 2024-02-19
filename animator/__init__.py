@@ -8,7 +8,16 @@ from typing import Iterable
 
 import neopixel
 
-import Animator.light_funcs as light_funcs
+import animator.light_funcs as light_funcs
+
+COLORS = [
+            (255, 0, 0),   # Red
+            (0, 255, 0),   # Green
+            (255, 255, 0), # Yellow
+            (0, 0, 255),   # Blue
+            (255, 127, 0), # Orange
+            (0, 0, 0)      # Off
+        ]
 
 
 @dataclass
@@ -97,7 +106,7 @@ def rindex(lst, value):
 def square_wave(t, period, amplitude):
     # Calculate the remainder when t is divided by T
     remainder = t % period
-    
+
     # Determine the value of the square wave based on the remainder
     if remainder < period / 2:
         return amplitude
@@ -119,16 +128,9 @@ class Animator():
         self.fade_stage = 0
         self.swipe_stage = 0
 
-    def cycle(self):
-        COLORS = [
-            (255, 0, 0),   # Red
-            (0, 255, 0),   # Green
-            (255, 255, 0), # Yellow
-            (0, 0, 255),   # Blue
-            (255, 127, 0), # Orange
-            (0, 0, 0)      # Off
-        ]
-
+    def cycle(self) -> None:
+        """Run one cycle of the animation
+        """ 
         if self.previous_animation != self.animation_state.effect: # reset animaton data
             self.pixels.fill((0, 0, 0))
 
@@ -186,7 +188,8 @@ class Animator():
         elif self.animation_state.effect == "Fade" and self.animation_state.state == "ON":
             self.pixels.fill(light_funcs.round_tuple(mix_colors(self.animation_args.fade.colora,
                                                     self.animation_args.fade.colorb,
-                                                    math.sin((self.animation_step / 255) * math.pi))))
+                                                    math.sin((self.animation_step / 255) *
+                                                             math.pi))))
             self.pixels.show()
             self.pixels.brightness = self.animation_state.brightness / 255.0
             time.sleep(1 / fast_fps)
@@ -195,7 +198,7 @@ class Animator():
                 self.pixels.fill(self.animation_args.flash.colora)
             else:
                 self.pixels.fill(self.animation_args.flash.colorb)
-            
+
             self.pixels.brightness = self.animation_state.brightness / 255.0
             time.sleep(1 / basic_fps)
         elif self.animation_state.effect == "Wipe" and self.animation_state.state == "ON":
@@ -211,7 +214,7 @@ class Animator():
                         self.pixels[last_pixel + 1] = self.animation_args.wipe.colora
                 else:
                     last_pixel = rindex(list(self.pixels), list(self.animation_args.wipe.colorb))
-                    if last_pixel == None:
+                    if last_pixel is None:
                         last_pixel = -1
 
                     if last_pixel + 2 > self.num_pixels:

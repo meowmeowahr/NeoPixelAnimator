@@ -13,7 +13,7 @@ import neopixel
 import yaml
 from paho.mqtt import client as mqtt_client
 
-import Animator
+import animator
 
 # Import yaml config
 with open("config.yaml", encoding="utf-8") as stream:
@@ -52,16 +52,16 @@ driver_config: dict = configuration.get('driver', {})
 num_pixels: int = driver_config.get('num_pixels', 100) # strip length
 pixel_pin = getattr(board, driver_config.get('pin', 'D18')) # rpi gpio pin
 
-animation_args = Animator.AnimationArgs()
+animation_args = animator.AnimationArgs()
 animation_args.single_color.color = [0, 255, 0]
 
-animation_state = Animator.AnimationState()
+animation_state = animator.AnimationState()
 animation_state.brightness = 100
 
 # Create NeoPixel object
 pixels = neopixel.NeoPixel(pixel_pin, num_pixels, brightness=1.0,
                            auto_write=False, pixel_order="RGB")
-animator = Animator.Animator(pixels, num_pixels, animation_state, animation_args)
+animator = animator.Animator(pixels, num_pixels, animation_state, animation_args)
 
 def on_connect(cli, userdata, flags, rc):
     "On disconnection of mqtt"
