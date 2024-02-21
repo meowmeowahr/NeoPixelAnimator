@@ -44,8 +44,11 @@ brightness_topic: str = mqtt_topics.get("brightness_topic", "MQTTAnimator/bright
 args_topic: str = mqtt_topics.get("args_topic", "MQTTAnimator/args")
 animation_topic: str = mqtt_topics.get("animation_topic", "MQTTAnimator/animation")
 
-data_request_return_topic: str = mqtt_topics.get("return_data_request_topic", "MQTTAnimator/rdata_request")
+data_request_return_topic: str = mqtt_topics.get("return_data_request_topic",
+                                                 "MQTTAnimator/rdata_request")
 state_return_topic: str = mqtt_topics.get("return_state_topic", "MQTTAnimator/rstate")
+brightness_return_topic: str = mqtt_topics.get("return_brightness_topic",
+                                               "MQTTAnimator/rbrightness")
 
 first_reconnect_delay: int = mqtt_reconnection.get("first_reconnect_delay", 1)
 reconnect_rate: int = mqtt_reconnection.get("reconnect_rate", 2)
@@ -108,13 +111,16 @@ def on_message(cli: mqtt_client.Client, __, msg):
     print(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
 
     if msg.topic == data_request_topic:
-        cli.publish(data_request_return_topic, json.dumps({"state": animation_state.state, "brightness": animation_state.brightness}))
+        cli.publish(data_request_return_topic,
+                    json.dumps({"state": animation_state.state,
+                                "brightness": animation_state.brightness}))
     elif msg.topic == state_topic:
         animation_state.state = "ON" if msg.payload.decode() == "ON" else "OFF"
         cli.publish(state_return_topic, "ON" if msg.payload.decode() == "ON" else "OFF")
     elif msg.topic == brightness_topic:
         if msg.payload.decode().isdigit():
             animation_state.brightness = int(msg.payload.decode())
+            cli.publish(brightness_return_topic, int(msg.payload.decode()))
         else:
             logging.warning("Invalid brightness data: %s", msg.payload.decode())
     elif msg.topic == animation_topic:
