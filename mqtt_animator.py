@@ -38,10 +38,14 @@ mqtt_borker: str = mqtt_config.get("host", "localhost")
 mqtt_port: int = mqtt_config.get("port", 1883)
 client_id = f"mqtt-animator-{random.randint(0, 1000)}"
 
+data_request_topic: str = mqtt_topics.get("data_request_topic", "MQTTAnimator/data_request")
 state_topic: str = mqtt_topics.get("state_topic", "MQTTAnimator/state")
 brightness_topic: str = mqtt_topics.get("brightness_topic", "MQTTAnimator/brightness")
 args_topic: str = mqtt_topics.get("args_topic", "MQTTAnimator/args")
 animation_topic: str = mqtt_topics.get("animation_topic", "MQTTAnimator/animation")
+
+data_request_return_topic: str = mqtt_topics.get("return_data_request_topic", "MQTTAnimator/rdata_request")
+state_return_topic: str = mqtt_topics.get("return_state_topic", "MQTTAnimator/rstate")
 
 first_reconnect_delay: int = mqtt_reconnection.get("first_reconnect_delay", 1)
 reconnect_rate: int = mqtt_reconnection.get("reconnect_rate", 2)
@@ -99,12 +103,15 @@ def on_disconnect(cli, _, rc):
     )  # Set Connecting Client ID
 
 
-def on_message(_, __, msg):
+def on_message(cli: mqtt_client.Client, __, msg):
     "Callback for mqtt message recieved"
     print(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
 
-    if msg.topic == state_topic:
+    if msg.topic == data_request_topic:
+        cli.publish(data_request_return_topic, json.dumps({"state": animation_state.state, "brightness": animation_state.brightness}))
+    elif msg.topic == state_topic:
         animation_state.state = "ON" if msg.payload.decode() == "ON" else "OFF"
+        cli.publish(state_return_topic, "ON" if msg.payload.decode() == "ON" else "OFF")
     elif msg.topic == brightness_topic:
         if msg.payload.decode().isdigit():
             animation_state.brightness = int(msg.payload.decode())
@@ -129,6 +136,7 @@ if __name__ == "__main__":
     client.on_disconnect = on_disconnect
     client.on_message = on_message
     client.connect(mqtt_borker, mqtt_port)
+    client.subscribe(data_request_topic)
     client.subscribe(state_topic)
     client.subscribe(brightness_topic)
     client.subscribe(animation_topic)
