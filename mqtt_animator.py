@@ -47,6 +47,7 @@ animation_topic: str = mqtt_topics.get("animation_topic", "MQTTAnimator/animatio
 data_request_return_topic: str = mqtt_topics.get("return_data_request_topic",
                                                  "MQTTAnimator/rdata_request")
 state_return_topic: str = mqtt_topics.get("return_state_topic", "MQTTAnimator/rstate")
+anim_return_topic: str = mqtt_topics.get("return_anim_topic", "MQTTAnimator/ranimation")
 brightness_return_topic: str = mqtt_topics.get("return_brightness_topic",
                                                "MQTTAnimator/rbrightness")
 
@@ -113,7 +114,8 @@ def on_message(cli: mqtt_client.Client, __, msg):
     if msg.topic == data_request_topic:
         cli.publish(data_request_return_topic,
                     json.dumps({"state": animation_state.state,
-                                "brightness": animation_state.brightness}))
+                                "brightness": animation_state.brightness,
+                                "animation": animation_state.effect}))
     elif msg.topic == state_topic:
         animation_state.state = "ON" if msg.payload.decode() == "ON" else "OFF"
         cli.publish(state_return_topic, "ON" if msg.payload.decode() == "ON" else "OFF")
@@ -125,6 +127,7 @@ def on_message(cli: mqtt_client.Client, __, msg):
             logging.warning("Invalid brightness data: %s", msg.payload.decode())
     elif msg.topic == animation_topic:
         animation_state.effect = msg.payload.decode()
+        cli.publish(anim_return_topic, animation_state.effect)
     elif msg.topic == args_topic:
         animation, data = msg.payload.decode().split(",", maxsplit=1)
         data = json.loads(data)

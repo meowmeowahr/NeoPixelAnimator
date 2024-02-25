@@ -10,7 +10,8 @@ mqtt:
     state_topic: "MQTTAnimator/state"
     return_state_topic: "MQTTAnimator/rstate"
     brightness_topic: "MQTTAnimator/brightness"
-    breturn_rightness_topic: "MQTTAnimator/rbrightness"
+    return_brightness_topic: "MQTTAnimator/rbrightness"
+    return_anim_topic: "MQTTAnimator/ranimation"
     args_topic: "MQTTAnimator/args"
     animation_topic: "MQTTAnimator/animation"
   reconnection:
