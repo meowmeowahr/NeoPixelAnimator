@@ -138,13 +138,7 @@ def on_message(cli: mqtt_client.Client, __, msg):
     print(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
 
     if msg.topic == data_request_topic:
-        cli.publish(data_request_return_topic,
-                    json.dumps({"state": animation_state.state,
-                                "brightness": animation_state.brightness,
-                                "animation": animation_state.effect,
-                                "args": json.dumps(dataclasses.asdict(animation_args))
-                                })
-                    )
+        publish_state(cli)
     elif msg.topic == state_topic:
         animation_state.state = "ON" if msg.payload.decode() == "ON" else "OFF"
         cli.publish(state_return_topic, "ON" if msg.payload.decode() == "ON" else "OFF")
@@ -176,6 +170,14 @@ def on_message(cli: mqtt_client.Client, __, msg):
 
         animation_args = AnimationArgs(**json.loads(data))
 
+def publish_state(cli):
+    cli.publish(data_request_return_topic,
+                    json.dumps({"state": animation_state.state,
+                                "brightness": animation_state.brightness,
+                                "animation": animation_state.effect,
+                                "args": json.dumps(dataclasses.asdict(animation_args))
+                                })
+                    )
 
 if __name__ == "__main__":
     # connect to mqtt server
@@ -189,6 +191,8 @@ if __name__ == "__main__":
     client.subscribe(brightness_topic)
     client.subscribe(animation_topic)
     client.subscribe(args_topic)
+
+    publish_state(client)
 
     # run mqtt background tasks in thread
     threading.Thread(
