@@ -13,6 +13,7 @@ mqtt:
     return_brightness_topic: "MQTTAnimator/rbrightness"
     return_anim_topic: "MQTTAnimator/ranimation"
     args_topic: "MQTTAnimator/args"
+    full_args_topic: "MQTTAnimator/fargs"
     animation_topic: "MQTTAnimator/animation"
   reconnection:
     first_reconnect_delay: 1
