@@ -34,6 +34,10 @@ class SingleColorArgs:
     "Single Color mode options"
     color: tuple = (255, 0, 0)
 
+@dataclass
+class GlitterRainbowArgs:
+    "Glitter Rainbow Animation options"
+    glitter_ratio: float = 0.05
 
 @dataclass
 class FadeArgs:
@@ -62,6 +66,7 @@ class WipeArgs:
 class AnimationArgs:
     "Options for animations"
     single_color: SingleColorArgs = SingleColorArgs()
+    glitter_rainbow: GlitterRainbowArgs = GlitterRainbowArgs()
     fade: FadeArgs = FadeArgs()
     flash: FlashArgs = FlashArgs()
     wipe: WipeArgs = WipeArgs()
@@ -157,8 +162,9 @@ class Animator:
                 pixel_index = (i * 256 // self.num_pixels) + self.animation_step
                 self.pixels[i] = light_funcs.wheel(pixel_index & 255)
             self.pixels.brightness = self.animation_state.brightness / 255.0
-            led = random.randint(0, self.num_pixels - 1)
-            self.pixels[led] = (255, 255, 255)
+            for i in range(math.floor(self.animation_args.glitter_rainbow.glitter_ratio * self.num_pixels)):
+                led = random.randint(0, self.num_pixels - 1)
+                self.pixels[led] = (255, 255, 255)
             time.sleep(1 / FAST_FPS)
         elif (
             self.animation_state.effect == "Colorloop"
