@@ -65,11 +65,11 @@ class WipeArgs:
 @dataclass
 class AnimationArgs:
     "Options for animations"
-    single_color: SingleColorArgs = SingleColorArgs()
-    glitter_rainbow: GlitterRainbowArgs = GlitterRainbowArgs()
-    fade: FadeArgs = FadeArgs()
-    flash: FlashArgs = FlashArgs()
-    wipe: WipeArgs = WipeArgs()
+    single_color: SingleColorArgs = field(default_factory=SingleColorArgs)
+    glitter_rainbow: GlitterRainbowArgs = field(default_factory=GlitterRainbowArgs)
+    fade: FadeArgs = field(default_factory=FadeArgs)
+    flash: FlashArgs = field(default_factory=FlashArgs)
+    wipe: WipeArgs = field(default_factory=WipeArgs)
 
 
 # Set the desired FPS for your animation
