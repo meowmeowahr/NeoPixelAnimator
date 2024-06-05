@@ -9,13 +9,18 @@ import threading
 import traceback
 import dataclasses
 
-import board
-import neopixel
+try:
+    import board
+    import neopixel
+except NotImplementedError as e:
+    logging.error(f"Error importing NeoPixel driver {repr(e)}. If you are using the emulator, you can ignore this message.")
+
 import yaml
 from paho.mqtt import client as mqtt_client
 
 import animator
 from animator import AnimationArgs
+import neopixel_emu
 
 # Import yaml config
 with open("config.yaml", encoding="utf-8") as stream:
@@ -62,22 +67,31 @@ max_reconnect_delay: int = mqtt_reconnection.get("max_reconnect_delay", 60)
 # NeoPixel driver config
 driver_config: dict = configuration.get("driver", {})
 
+virtual: bool = driver_config.get("virtual", False)
 num_pixels: int = driver_config.get("num_pixels", 100)  # strip length
-pixel_pin = getattr(board, driver_config.get("pin", "D18"))  # rpi gpio pin
+if not virtual:
+    pixel_pin = getattr(board, driver_config.get("pin", "D18"))  # rpi gpio pin
+else:
+    pixel_pin = None
 pixel_order = driver_config.get("order", "RGB")  # Color order
 
 global animation_args
 
 animation_args = animator.AnimationArgs()
-animation_args.single_color.color = [0, 255, 0]
+animation_args.single_color.color = (0, 255, 0)
 
 animation_state = animator.AnimationState()
 animation_state.brightness = 100
 
 # Create NeoPixel object
-pixels = neopixel.NeoPixel(
-    pixel_pin, num_pixels, brightness=1.0, auto_write=False, pixel_order=pixel_order
-)
+if virtual:
+    pixels = neopixel_emu.NeoPixel(
+        pixel_pin, num_pixels, brightness=1.0, auto_write=False, pixel_order=pixel_order
+    )
+else:
+    pixels = neopixel.NeoPixel(
+        pixel_pin, num_pixels, brightness=1.0, auto_write=False, pixel_order=pixel_order # type: ignore
+    )
 animator = animator.Animator(pixels, num_pixels, animation_state, animation_args)
 
 def validate_arg_import(json_data, dataclass_type):
@@ -135,7 +149,7 @@ def on_message(cli: mqtt_client.Client, __, msg):
     global animation_args
     
     "Callback for mqtt message recieved"
-    print(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
+    logging.debug(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
 
     if msg.topic == data_request_topic:
         publish_state(cli)

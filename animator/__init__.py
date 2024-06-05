@@ -4,9 +4,14 @@ import math
 import random
 import time
 from dataclasses import dataclass, field
-from typing import Iterable
+import logging
 
-import neopixel
+try:
+    import neopixel
+except NotImplementedError as e:
+    logging.error(f"Error importing NeoPixel driver {repr(e)}. If you are using the emulator, you can ignore this message.")
+
+import neopixel_emu
 
 from animator import light_funcs
 
@@ -22,7 +27,7 @@ COLORS = [
 
 @dataclass
 class AnimationState:
-    "State of animations and neopixels"
+    """State of animations and neopixels"""
     state: str = "OFF"
     color: tuple = (255, 255, 255)
     effect: str = "SingleColor"
@@ -31,24 +36,24 @@ class AnimationState:
 
 @dataclass
 class SingleColorArgs:
-    "Single Color mode options"
+    """Single Color mode options"""
     color: tuple = (255, 0, 0)
 
 @dataclass
 class GlitterRainbowArgs:
-    "Glitter Rainbow Animation options"
+    """Glitter Rainbow Animation options"""
     glitter_ratio: float = 0.05
 
 @dataclass
 class FadeArgs:
-    "Fade Animation options"
+    """Fade Animation options"""
     colora: tuple = (255, 0, 0)
     colorb: tuple = (0, 0, 0)
 
 
 @dataclass
 class FlashArgs:
-    "Flash Animation options"
+    """Flash Animation options"""
     colora: tuple = (255, 0, 0)
     colorb: tuple = (0, 0, 0)
     speed: float = 25
@@ -56,7 +61,7 @@ class FlashArgs:
 
 @dataclass
 class WipeArgs:
-    "Wipe Animation options"
+    """Wipe Animation options"""
     colora: tuple = (255, 0, 0)
     colorb: tuple = (0, 0, 255)
     leds_iter: int = 1
@@ -64,7 +69,7 @@ class WipeArgs:
 
 @dataclass
 class AnimationArgs:
-    "Options for animations"
+    """Options for animations"""
     single_color: SingleColorArgs = field(default_factory=SingleColorArgs)
     glitter_rainbow: GlitterRainbowArgs = field(default_factory=GlitterRainbowArgs)
     fade: FadeArgs = field(default_factory=FadeArgs)
@@ -110,7 +115,7 @@ class Animator:
     """NeoPixel Animation class"""
     def __init__(
         self,
-        pixels: neopixel.NeoPixel,
+        pixels: 'neopixel.NeoPixel | neopixel_emu.NeoPixel',
         num_pixels: int,
         animation_state: AnimationState,
         animation_args: AnimationArgs,

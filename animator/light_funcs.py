@@ -1,3 +1,5 @@
+from typing import Any
+
 "Useful functions for animator"
 
 
@@ -47,7 +49,7 @@ def color_fade(color_a: tuple, color_b: tuple, t: float) -> tuple:
     return (lerp(r1, r2, t), lerp(g1, g2, t), lerp(b1, b2, t))
 
 
-def map_range(x: int, in_min: int, in_max: int, out_min: int, out_max: int):
+def map_range(x: float, in_min: int, in_max: int, out_min: int, out_max: int):
     """Map bounds of input to bounds of output
 
     Args:
@@ -111,7 +113,7 @@ def square_wave(t, period, amplitude):
     return -amplitude
 
 
-def rindex(lst: list, value: any) -> int:
+def rindex(lst: list, value: Any) -> int | None:
     """Get last occurrence of object in list
 
     Args:

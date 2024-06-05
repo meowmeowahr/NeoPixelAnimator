@@ -22,6 +22,7 @@ mqtt:
     max_reconnect_delay: 60
 
 driver:
-  num_pixels: 50
+  virtual: false
+  num_pixels: 200
   pin: "D18"
   order: "RGB"
