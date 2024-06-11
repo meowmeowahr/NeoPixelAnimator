@@ -13,7 +13,9 @@ except NotImplementedError as e:
 
 import neopixel_emu
 
-from animator import light_funcs
+from . import light_funcs
+from . import _firework
+from ._firework import FireworkArgs
 
 COLORS = [
     (255, 0, 0),  # Red
@@ -75,6 +77,7 @@ class AnimationArgs:
     fade: FadeArgs = field(default_factory=FadeArgs)
     flash: FlashArgs = field(default_factory=FlashArgs)
     wipe: WipeArgs = field(default_factory=WipeArgs)
+    firework: FireworkArgs = field(default_factory=FireworkArgs)
 
 
 # Set the desired FPS for your animation
@@ -265,6 +268,13 @@ class Animator:
                     else:
                         self.pixels[last_pixel + 1] = self.animation_args.wipe.colorb
 
+            self.pixels.brightness = self.animation_state.brightness / 255.0
+            time.sleep(1 / FAST_FPS)
+        elif (
+            self.animation_state.effect == "Firework"
+            and self.animation_state.state == "ON"
+        ):
+            _firework.firework_step(self.animation_args.firework, self.pixels)
             self.pixels.brightness = self.animation_state.brightness / 255.0
             time.sleep(1 / FAST_FPS)
         elif (

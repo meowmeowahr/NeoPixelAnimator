@@ -189,7 +189,8 @@ def publish_state(cli):
                     json.dumps({"state": animation_state.state,
                                 "brightness": animation_state.brightness,
                                 "animation": animation_state.effect,
-                                "args": json.dumps(dataclasses.asdict(animation_args))
+                                "args": json.dumps(dataclasses.asdict(animation_args)),
+                                "num_leds": pixels.n
                                 })
                     )
 
