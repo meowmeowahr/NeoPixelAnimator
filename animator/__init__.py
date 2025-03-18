@@ -60,6 +60,10 @@ class FlashArgs:
     colorb: tuple = (0, 0, 0)
     speed: float = 25
 
+@dataclass
+class RandomArgs:
+    """Random Animation options"""
+    color: tuple = (255, 255, 255)
 
 @dataclass
 class WipeArgs:
@@ -77,6 +81,7 @@ class AnimationArgs:
     fade: FadeArgs = field(default_factory=FadeArgs)
     flash: FlashArgs = field(default_factory=FlashArgs)
     wipe: WipeArgs = field(default_factory=WipeArgs)
+    random: RandomArgs = field(default_factory=RandomArgs)
     firework: FireworkArgs = field(default_factory=FireworkArgs)
 
 
@@ -283,7 +288,7 @@ class Animator:
         ):
             for i in range(self.num_pixels):
                 self.pixels[i] = (
-                    (255, 255, 255) if random.randint(0, 1) == 1 else (0, 0, 0)
+                    self.animation_args.random.color if random.randint(0, 1) == 1 else (0, 0, 0)
                 )
 
             self.pixels.brightness = self.animation_state.brightness / 255.0
